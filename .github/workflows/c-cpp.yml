@@ -52,6 +52,8 @@ jobs:
     env:
       SDL_VERSION: 2.30.3
       GH_CPU_ARCH: ${{ matrix.targetarch }}
+      WAFCACHE: $HOME/wafcache
+      WAFCACHE_VERBOSITY: 1
       WAFCACHE_EVICT_MAX_BYTES: 1000000 # github only gives 10gb for the whole repository
       WAFCACHE_STATS: 1 # enable statistics in build log
     steps:
@@ -63,8 +65,7 @@ jobs:
       uses: actions/cache@v3
       with:
         key: ${{ runner.os }}-${{ matrix.targetos }}-${{ matrix.targetarch }}
-        path: |
-          ~/.cache/wafcache*
+        path: ~/wafcache
     - name: Install dependencies
       run: bash scripts/gha/deps_${{ matrix.targetos }}.sh
     - name: Build engine

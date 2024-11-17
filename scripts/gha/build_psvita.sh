@@ -45,7 +45,7 @@ popd
 echo "Building engine..."
 
 ./waf configure -T release --psvita --enable-wafcache || die_configure
-./waf build install --destdir=pkgtemp/data/xash3d --zones=wafcache || die
+./waf build install --destdir=pkgtemp/data/xash3d || die
 cp build/engine/xash.vpk pkgtemp/
 
 echo "Building HLSDK..."
