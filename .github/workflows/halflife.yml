@@ -1,0 +1,32 @@
+name: HalfLife
+
+on: [workflow_dispatch]
+
+jobs:
+  build-windows-amd64:
+    runs-on: windows-2019
+
+    steps:
+    # Step 1: Checkout the code
+    - uses: actions/checkout@v2
+
+    # Step 2: Configure
+    - name: Set Up Environment
+      run: |
+        git submodule init && git submodule update
+        mkdir halflife_build
+
+    # Step 3: Build the project
+    - name: Windows Build
+      run: |
+        ./waf.bat configure -8
+        ./waf.bat build
+        ./waf.bat install --destdir=halflife_build
+
+    # Step 4: Upload build artifacts
+    - name: Upload Executables
+      uses: actions/upload-artifact@v3
+      with:
+        name: halflife_build
+        path: |
+          halflife_build/*
