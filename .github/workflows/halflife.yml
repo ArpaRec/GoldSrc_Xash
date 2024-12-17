@@ -19,7 +19,7 @@ jobs:
     # Step 3: Build the project
     - name: Windows Build
       run: |
-        ./waf.bat configure -8
+        ./waf.bat configure --sdl2=SDL2
         ./waf.bat build
         ./waf.bat install --destdir=halflife_build
 
