@@ -578,7 +578,7 @@ qboolean SV_CreateStaticEntity( sizebuf_t *msg, int index )
 	state->number = 0;
 
 	// trying to compress with previous delta's
-	offset = SV_FindBestBaselineForStatic( index, &baseline, state );
+	offset = SV_FindBestBaseline( index, &baseline, state, NULL, false );
 
 	MSG_BeginServerCmd( msg, svc_spawnstatic );
 	MSG_WriteDeltaEntity( baseline, state, msg, true, DELTA_STATIC, sv.time, offset );
@@ -1566,21 +1566,6 @@ edict_t *SV_FindGlobalEntity( string_t classname, string_t globalname )
 }
 
 /*
-==============
-pfnGetEntityIllum
-
-returns averaged lightvalue for entity
-==============
-*/
-static int GAME_EXPORT pfnGetEntityIllum( edict_t* pEnt )
-{
-	if( !SV_IsValidEdict( pEnt ))
-		return -1;
-
-	return SV_LightForEntity( pEnt );
-}
-
-/*
 =================
 pfnFindEntityInSphere
 
@@ -2450,10 +2435,17 @@ pfnLightStyle
 */
 static void GAME_EXPORT pfnLightStyle( int style, const char* val )
 {
-	if( style < 0 ) style = 0;
+	if( style < 0 )
+		style = 0;
+
 	if( style >= MAX_LIGHTSTYLES )
+	{
 		Host_Error( "%s: style: %i >= %d", __func__, style, MAX_LIGHTSTYLES );
-	if( sv.loadgame ) return; // don't let the world overwrite our restored styles
+		return;
+	}
+
+	if( sv.loadgame )
+		return; // don't let the world overwrite our restored styles
 
 	SV_SetLightStyle( style, val, 0.0f ); // set correct style
 }
@@ -4677,7 +4669,7 @@ static enginefuncs_t gEngfuncs =
 	pfnChangeYaw,
 	pfnChangePitch,
 	SV_FindEntityByString,
-	pfnGetEntityIllum,
+	SV_LightForEntity,
 	pfnFindEntityInSphere,
 	pfnFindClientInPVS,
 	pfnEntitiesInPVS,

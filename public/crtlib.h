@@ -1,6 +1,7 @@
 /*
 crtlib.h - internal stdlib
 Copyright (C) 2011 Uncle Mike
+Copyright (C) Free Software Foundation, Inc
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -169,63 +170,62 @@ static inline char *Q_strstr( const char *s1, const char *s2 )
 }
 
 // libc extensions, be careful what to enable or what not
+static inline size_t Q_strnlen( const char *str, size_t size )
+{
+#if HAVE_STRNLEN
+	return strnlen( str, size );
+#else
+	const char *p = (const char *)memchr( str, 0, size );
+	return p ? p - str : size;
+#endif
+}
+
 static inline size_t Q_strncpy( char *dst, const char *src, size_t size )
 {
-#if HAVE_STRLCPY
 	if( unlikely( !dst || !src || !size ))
 		return 0;
+#if HAVE_STRLCPY
 	return strlcpy( dst, src, size );
 #else
-	size_t len;
-	if( unlikely( !dst || !src || !size ))
-		return 0;
-
-	len = strlen( src );
-	if( len + 1 > size ) // check if truncate
 	{
-		memcpy( dst, src, size - 1 );
-		dst[size - 1] = 0;
-	}
-	else memcpy( dst, src, len + 1 );
+		size_t len = strlen( src );
 
-	return len; // count does not include NULL
+		if( len >= size ) // check if truncate
+		{
+			memcpy( dst, src, size );
+			dst[size - 1] = 0;
+		}
+		else memcpy( dst, src, len + 1 );
+
+		return len; // count does not include NULL
+	}
 #endif
 }
 
 static inline size_t Q_strncat( char *dst, const char *src, size_t size )
 {
-#if HAVE_STRLCAT
 	if( unlikely( !dst || !src || !size ))
 		return 0;
+#if HAVE_STRLCAT
 	return strlcat( dst, src, size );
 #else
-	char *d = dst;
-	const char *s = src;
-	size_t n = size;
-	size_t dlen;
-
-	if( unlikely( !dst || !src || !size ))
-		return 0;
-
-	// find the end of dst and adjust bytes left but don't go past end
-	while( n-- != 0 && *d != '\0' ) d++;
-	dlen = d - dst;
-	n = size - dlen;
-
-	if( n == 0 ) return( dlen + Q_strlen( s ));
-
-	while( *s != '\0' )
 	{
-		if( n != 1 )
-		{
-			*d++ = *s;
-			n--;
-		}
-		s++;
-	}
+		size_t slen = strlen( src );
+		size_t dlen = Q_strnlen( dst, size );
 
-	*d = '\0';
-	return( dlen + ( s - src )); // count does not include NULL
+		if( dlen != size )
+		{
+			size_t copy = size - dlen - 1;
+
+			if( copy > slen )
+				copy = slen;
+
+			memcpy( &dst[dlen], src, copy );
+			dst[dlen + copy] = 0;
+		}
+
+		return dlen + slen;
+	}
 #endif
 }
 
